@@ -146,11 +146,13 @@ export default function Main() {
     return null;
   }
 
+  //Reset the game
   function gameReset() {
     setCurrentWord(getRandomWord());
     setGuess([]);
   }
 
+  //Toggle game over status off
   function toggleOff() {
     const gameOver = document.getElementById("game-over");
     return (gameOver.style.display = "none");
