@@ -2,36 +2,33 @@ import "./index.css";
 import React from "react";
 import { languages } from "./language";
 import { clsx } from "clsx";
-import { getFarewellText } from "./utils";
-import { getRandomWord } from "./utils";
+import { getFarewellText, getRandomWord } from "./utils";
 import Confetti from "react-confetti";
+import Timer from "./timer";
 
 export default function Main() {
-  //State values
+  // State values
   const [currentWord, setCurrentWord] = React.useState(() => getRandomWord());
-
   const [guess, setGuess] = React.useState([]);
+  const [gameStarted, setGameStarted] = React.useState(false);
+  const [timeExpired, setTimeExpired] = React.useState(false);
 
-  //Derive values
+  // Derive values
   const wrongGuessCount = guess.filter(
     (letter) => !currentWord.includes(letter)
-  ).length; //Display the number of incorrect guesses
+  ).length;
 
-  //Game over configuration
   const isGameWon = currentWord
     .split("")
     .every((letter) => guess.includes(letter));
 
   const numGuessesLeft = languages.length - 1;
-
   const isGameLost = wrongGuessCount >= numGuessesLeft;
+  const isGameOver = isGameWon || isGameLost || timeExpired;
 
-  const isGameOver = isGameWon || isGameLost;
-
-  const lastGuessLetter = guess[guess.length - 1]; //check the last guess
-
+  const lastGuessLetter = guess[guess.length - 1];
   const isLastGuessIncorrect =
-    lastGuessLetter && !currentWord.includes(lastGuessLetter); //checks if the last guess is incorrect
+    lastGuessLetter && !currentWord.includes(lastGuessLetter);
 
   const [count, setCount] = React.useState(numGuessesLeft);
 
@@ -45,14 +42,14 @@ export default function Main() {
     setCount(numGuessesLeft);
   }, [currentWord, numGuessesLeft]);
 
-  //static values
+  // Add guess
   function displayGuess(letter) {
     setGuess((prevGuess) =>
       prevGuess.includes(letter) ? prevGuess : [...prevGuess, letter]
     );
   }
 
-  //Display the array of languages
+  // Display languages
   const languageElements = languages.map((lang, index) => {
     const isLanguageLost = index < wrongGuessCount;
 
@@ -67,30 +64,26 @@ export default function Main() {
     );
   });
 
-  //Display the array guessed words
+  // Display guessed word
   const wordArray = currentWord.split("").map((word, index) => {
-    const revealWord = isGameLost || guess.includes(word);
+    const revealWord = isGameOver || guess.includes(word);
 
     const wordClassName = clsx(
-      isGameLost && !guess.includes(word) && "missed-word"
-    ); //color the wrong words
+      isGameOver && !guess.includes(word) && "missed-word"
+    );
 
     return (
       <span key={index} className={wordClassName}>
         {revealWord ? word.toLocaleUpperCase() : ""}
-      </span> //display the individual guessed words accordingly if it is in the guess array
+      </span>
     );
   });
 
-  //Display the keyboard to the screen
+  // Display keyboard
   const alphabet = "abcdefghijklmnopqrstuvwxyz";
-
   const keyboard = alphabet.split("").map((letter) => {
-    const isGuessed = guess.includes(letter); //Checks to see if the document is in the guess array in the Guess STATE
-
-    //Gives it a conditional className to color the right and wrong guesses
+    const isGuessed = guess.includes(letter);
     const isCorrect = isGuessed && currentWord.includes(letter);
-
     const isWrong = isGuessed && !currentWord.includes(letter);
 
     const className = clsx({
@@ -98,13 +91,15 @@ export default function Main() {
       wrong: isWrong,
     });
 
+    const disableButton = isGameOver || !gameStarted;
+
     return (
       <button
         key={letter}
-        onClick={() => displayGuess(letter)} // add the click word to the guess STATE
+        onClick={() => displayGuess(letter)}
         className={className}
-        disabled={isGameOver}
-        aria-disabled={guess.includes(letter)}
+        disabled={disableButton}
+        aria-disabled={isGuessed}
         aria-label={`letter ${letter}`}
       >
         {letter.toLocaleUpperCase()}
@@ -112,13 +107,14 @@ export default function Main() {
     );
   });
 
-  //Determining game status color
+  // Status styling
   const gameStatusClass = clsx("status-text", {
     won: isGameWon,
-    lost: isGameLost,
+    lost: isGameLost || timeExpired,
     farewell: !isGameOver && isLastGuessIncorrect,
   });
 
+  // Render status message
   function renderGameStatus() {
     if (!isGameOver && isLastGuessIncorrect) {
       return (
@@ -143,24 +139,34 @@ export default function Main() {
         </>
       );
     }
+    if (timeExpired) {
+      return (
+        <>
+          <h2>Time's Up!</h2>
+          <p>You ran out of time!</p>
+        </>
+      );
+    }
     return null;
   }
 
-  //Reset the game
+  // Reset the game
   function gameReset() {
     setCurrentWord(getRandomWord());
     setGuess([]);
+    setGameStarted(true);
+    setTimeExpired(false);
   }
 
-  //Toggle game over status off
+  // Toggle game over popup
   function toggleOff() {
     const gameOver = document.getElementById("game-over");
-    return (gameOver.style.display = "none");
+    if (gameOver) gameOver.style.display = "none";
   }
 
   return (
     <div className="assembly-endgame">
-      {isGameLost && (
+      {(isGameLost || timeExpired) && (
         <div id="game-over">
           <span>
             <img className="img" src="/gameover.png" alt="Game Over" />
@@ -168,7 +174,8 @@ export default function Main() {
           </span>
         </div>
       )}
-      <main>
+
+      <main className="main">
         {isGameWon && <Confetti recycle={false} numberOfPieces={1000} />}
         <header>
           <h1>Assembly: Endgame</h1>
@@ -177,11 +184,14 @@ export default function Main() {
             attempts to keep the programming world safe from Assembly!
           </p>
         </header>
+
         <section aria-live="polite" role="status" className={gameStatusClass}>
           {renderGameStatus()}
         </section>
+
         <section className="languages">{languageElements}</section>
         <section className="word">{wordArray}</section>
+
         <section className="sr-only" aria-live="polite" role="status">
           <p>
             {currentWord.includes(lastGuessLetter)
@@ -199,12 +209,23 @@ export default function Main() {
             You have {numGuessesLeft} attempts left
           </p>
         </section>
+
         <section className="keyboard-container">{keyboard}</section>
-        {isGameOver && (
+
+        {isGameOver || !gameStarted ? (
           <button onClick={gameReset} className="new-game">
-            New Game
+            {!gameStarted ? "Start Game" : "New Game"}
           </button>
-        )}
+        ) : null}
+
+        <Timer
+          gameStarted={gameStarted}
+          isGameOver={isGameOver}
+          onExpire={() => {
+            setTimeExpired(true);
+            setGameStarted(false);
+          }}
+        />
       </main>
     </div>
   );

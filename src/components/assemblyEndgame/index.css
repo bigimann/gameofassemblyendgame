@@ -25,6 +25,7 @@
 header .count-span {
   color: red;
   font-size: 20px;
+  cursor: pointer;
 }
 
 .assembly-endgame header > h1 {
@@ -228,4 +229,23 @@ span.chip.lost::before {
 
 #game-over button:hover {
   background-color: #ec5c49e3;
+}
+
+.desktop-warning {
+  display: none;
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: 500;
+  color: black;
+  background-color: white;
+}
+
+@media (min-width: 633px) {
+  .assembly-endgame {
+    display: none;
+  }
+  .desktop-warning {
+    display: block;
+  }
 }
