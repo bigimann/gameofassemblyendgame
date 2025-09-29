@@ -1,14 +1,19 @@
 import React from "react";
 
-const Timer = React.memo(function Timer({ gameStarted, isGameOver, onExpire }) {
-  const [time, setTime] = React.useState(60);
+const Timer = React.memo(function Timer({
+  gameStarted,
+  isGameOver,
+  duration = 60,
+  onExpire,
+}) {
+  const [time, setTime] = React.useState(duration);
 
   // Reset timer when game restarts
   React.useEffect(() => {
     if (gameStarted) {
-      setTime(60);
+      setTime(duration);
     }
-  }, [gameStarted]);
+  }, [gameStarted, duration]);
 
   // Countdown effect
   React.useEffect(() => {

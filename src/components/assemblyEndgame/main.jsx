@@ -12,6 +12,7 @@ export default function Main() {
   const [guess, setGuess] = React.useState([]);
   const [gameStarted, setGameStarted] = React.useState(false);
   const [timeExpired, setTimeExpired] = React.useState(false);
+  const [resetTimerFlag, setResetTimerFlag] = React.useState(0);
 
   // Derive values
   const wrongGuessCount = guess.filter(
@@ -156,6 +157,7 @@ export default function Main() {
     setGuess([]);
     setGameStarted(true);
     setTimeExpired(false);
+    setResetTimerFlag((prev) => prev + 1); // 🔥 force timer reset
   }
 
   // Toggle game over popup
@@ -219,8 +221,10 @@ export default function Main() {
         ) : null}
 
         <Timer
+          key={resetTimerFlag} // 🔥 forces re-mount on reset
           gameStarted={gameStarted}
           isGameOver={isGameOver}
+          duration={60}
           onExpire={() => {
             setTimeExpired(true);
             setGameStarted(false);
