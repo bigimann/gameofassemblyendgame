@@ -1,6 +1,11 @@
 * {
   margin: 0;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+html {
+  overflow: hidden;
 }
 
 .assembly-endgame {
@@ -247,5 +252,11 @@ span.chip.lost::before {
   }
   .desktop-warning {
     display: block;
+  }
+}
+
+@media (min-width: 320px) and (max-width: 426px) {
+  .main {
+    margin-top: 100px;
   }
 }
